@@ -1,10 +1,32 @@
-todo = {}
+import pickle
+import configparser
+
+
+config = configparser.ConfigParser()
+config.read('calendar.ini')
+
+
+FILENAME = config['Serializer']['Filename']
+
+
+def load_tasks(filename=FILENAME):
+    try:
+        with open(filename, 'rb') as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return {}
+
+
+def save_tasks(obj, filename=FILENAME):
+    with open(filename, 'wb') as f:
+        pickle.dump(obj, f)
 
 
 def _append_task(date, task):
     if date not in todo:
         todo[date] = []
     todo[date].append(task)
+    save_tasks(todo)
 
 
 def _list_tasks(date):
@@ -27,6 +49,8 @@ def list_tasks():
     except ValueError:
         print('There are no tasks on this day')
 
+
+todo = load_tasks()
 
 while True:
     print("""a - append task
