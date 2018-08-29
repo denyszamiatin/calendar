@@ -1,8 +1,5 @@
-import pickle
-import json
 import configparser
-import abc
-
+import calendar as cal_mod
 
 config = configparser.ConfigParser()
 config.read('calendar.ini')
@@ -10,72 +7,16 @@ config.read('calendar.ini')
 FILENAME = config['Serializer']['Filename']
 
 
-class Serializer(metaclass=abc.ABCMeta):
-    EXTENSION = ''
-
-    def __init__(self, filename=FILENAME):
-        self.filename = filename + self.EXTENSION
-
-    @abc.abstractmethod
-    def _load(self):
-        pass
-
-    def load(self):
-        try:
-            return self._load()
-        except FileNotFoundError:
-            return {}
-
-
-class PickleSerializer(Serializer):
-    EXTENSION = '.pickle'
-
-    def _load(self):
-        with open(self.filename, 'rb') as f:
-            return pickle.load(f)
-
-    def save(self, obj):
-        with open(self.filename, 'wb') as f:
-            pickle.dump(obj, f)
-
-
-class JsonSerializer(Serializer):
-    EXTENSION = '.json'
-
-    def _load(self):
-        with open(self.filename, 'rt') as f:
-            return json.load(f)
-
-    def save(self, obj):
-        with open(self.filename, 'wt') as f:
-            json.dump(obj, f)
-
-
-class Calendar:
-    def __init__(self, serializer):
-        self.serializer = serializer
-        self.todo = self.serializer.load()
-
-    def append(self, date, task):
-        if date not in self.todo:
-            self.todo[date] = []
-        self.todo[date].append(task)
-        self.serializer.save(self.todo)
-
-    def list(self, date):
-        if date not in self.todo:
-            raise ValueError
-        return tuple(self.todo[date])
-
-
 if config['Serializer']['Type'] == 'JSON':
-    serializer = JsonSerializer()
+    import json_serializer
+    serializer = json_serializer.JsonSerializer(filename=FILENAME)
 elif config['Serializer']['Type'] == 'Pickle':
-    serializer = PickleSerializer()
+    import pickle_serializer
+    serializer = pickle_serializer.PickleSerializer(filename=FILENAME)
 else:
     raise TypeError
 
-calendar = Calendar(serializer)
+calendar = cal_mod.Calendar(serializer)
 
 
 def append_task():
