@@ -1,5 +1,6 @@
 import json
-import serializer
+from . import serializer
+
 
 class JsonSerializer(serializer.Serializer):
     EXTENSION = '.json'

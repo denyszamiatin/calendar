@@ -1,5 +1,5 @@
 import pickle
-import serializer
+from . import serializer
 
 
 class PickleSerializer(serializer.Serializer):

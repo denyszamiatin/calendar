@@ -1,22 +1,13 @@
 import configparser
 import calendar as cal_mod
+import serializer
 
 config = configparser.ConfigParser()
 config.read('calendar.ini')
 
 FILENAME = config['Serializer']['Filename']
 
-
-if config['Serializer']['Type'] == 'JSON':
-    import json_serializer
-    serializer = json_serializer.JsonSerializer(filename=FILENAME)
-elif config['Serializer']['Type'] == 'Pickle':
-    import pickle_serializer
-    serializer = pickle_serializer.PickleSerializer(filename=FILENAME)
-else:
-    raise TypeError
-
-calendar = cal_mod.Calendar(serializer)
+calendar = cal_mod.Calendar(serializer.get_serializer(config['Serializer']['Type'], FILENAME))
 
 
 def append_task():
