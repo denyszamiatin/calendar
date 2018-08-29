@@ -1,56 +1,97 @@
 import pickle
+import json
 import configparser
+import abc
 
 
 config = configparser.ConfigParser()
 config.read('calendar.ini')
 
-
 FILENAME = config['Serializer']['Filename']
 
 
-def load_tasks(filename=FILENAME):
-    try:
-        with open(filename, 'rb') as f:
+class Serializer(metaclass=abc.ABCMeta):
+    EXTENSION = ''
+
+    def __init__(self, filename=FILENAME):
+        self.filename = filename + self.EXTENSION
+
+    @abc.abstractmethod
+    def _load(self):
+        pass
+
+    def load(self):
+        try:
+            return self._load()
+        except FileNotFoundError:
+            return {}
+
+
+class PickleSerializer(Serializer):
+    EXTENSION = '.pickle'
+
+    def _load(self):
+        with open(self.filename, 'rb') as f:
             return pickle.load(f)
-    except FileNotFoundError:
-        return {}
+
+    def save(self, obj):
+        with open(self.filename, 'wb') as f:
+            pickle.dump(obj, f)
 
 
-def save_tasks(obj, filename=FILENAME):
-    with open(filename, 'wb') as f:
-        pickle.dump(obj, f)
+class JsonSerializer(Serializer):
+    EXTENSION = '.json'
+
+    def _load(self):
+        with open(self.filename, 'rt') as f:
+            return json.load(f)
+
+    def save(self, obj):
+        with open(self.filename, 'wt') as f:
+            json.dump(obj, f)
 
 
-def _append_task(date, task):
-    if date not in todo:
-        todo[date] = []
-    todo[date].append(task)
-    save_tasks(todo)
+class Calendar:
+    def __init__(self, serializer):
+        self.serializer = serializer
+        self.todo = self.serializer.load()
+
+    def append(self, date, task):
+        if date not in self.todo:
+            self.todo[date] = []
+        self.todo[date].append(task)
+        self.serializer.save(self.todo)
+
+    def list(self, date):
+        if date not in self.todo:
+            raise ValueError
+        return tuple(self.todo[date])
 
 
-def _list_tasks(date):
-    if date not in todo:
-        raise ValueError
-    return tuple(todo[date])
+if config['Serializer']['Type'] == 'JSON':
+    serializer = JsonSerializer()
+elif config['Serializer']['Type'] == 'Pickle':
+    serializer = PickleSerializer()
+else:
+    raise TypeError
+
+calendar = Calendar(serializer)
 
 
 def append_task():
     date = input('Date?')
     task = input('Task?')
-    _append_task(date, task)
+    calendar.append(date, task)
 
 
 def list_tasks():
     date = input('Date?')
     try:
-        for task in _list_tasks(date):
+        for task in calendar.list(date):
             print(task)
     except ValueError:
         print('There are no tasks on this day')
 
-
-todo = load_tasks()
 
 while True:
     print("""a - append task
