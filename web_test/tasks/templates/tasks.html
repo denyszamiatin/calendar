@@ -1,0 +1,14 @@
+{% extends 'index.html' %}
+{% block content %}
+<ul>
+{% for task in tasks %}
+<li>{{task.task}}</li>
+{% endfor %}
+</ul>
+<h2>Add task</h2>
+<form method='post'>
+{{form.as_p}}
+{% csrf_token %}
+<p><input type='submit' value='Ok'></p>
+</form>
+{% endblock %}

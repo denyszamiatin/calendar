@@ -1,0 +1,22 @@
+<html>
+    <head>
+        <title>Tasks</title>
+    </head>
+    <body>
+        <h1>My Tasks</h1>
+        {% block content %}
+        <ul>
+        {% for date in dates %}
+        <li><a href='/date/{{date.id}}'>{{date.dt}}</a></li>
+        {% endfor %}
+        </ul>
+        <h2>Add date</h2>
+        <form method='post'>
+        {{form.as_p}}
+        {% csrf_token %}
+        <p><input type='submit' value='Ok'></p>
+        </form>
+        {% endblock %}
+        
+    </body>
+</html>
